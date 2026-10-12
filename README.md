@@ -4,6 +4,17 @@
 
 Es un **motor de personalización de videojuegos de cumpleaños para niños**. Con una sola base de código se atiende a todos los clientes: por cada pedido solo cambia un archivo **JSON** con los datos del cumpleañero (nombre, edad, mascota, amigos, colores y personaje), y el motor genera **6 minijuegos personalizados** que se entregan por link y código QR.
 
+![Probador de pedidos con el config de Sofía](docs/probador-sofia.png)
+
+*El probador de pedidos: cuando cambias el pedido (Sofía → Pedro), los textos de los 6 juegos se reescriben solos con el género, el nombre, la edad y la mascota de cada cliente.*
+
+<details>
+<summary>Ver el mismo probador con el pedido de Pedro</summary>
+
+![Probador de pedidos con el config de Pedro](docs/probador-pedro.png)
+
+</details>
+
 ## Lo interesante del proyecto
 
 ### Motor de género gramatical en español
