@@ -1,0 +1,35 @@
+{
+  "_comentario": "Copia este archivo por cada pedido nuevo. Los campos marcados OBLIGATORIO no pueden quedar vacios o el linter falla.",
+
+  "pedido": { "id": "", "plan": "basico | medio | premium", "fechaFiesta": "", "contacto": "" },
+
+  "nombre": "OBLIGATORIO",
+  "apodo": "",
+  "genero": "m | f | n   <- OBLIGATORIO. m=masculino, f=femenino, n=neutro/no binario",
+  "edad": 0,
+
+  "ciudad": "",
+  "lugar": "el lugar favorito del nino/a (la plaza, la playa, la cancha...)",
+  "colegio": "",
+  "amigos": ["", "", ""],
+
+  "mascota": { "nombre": "", "tipo": "perro | gata | conejo...", "genero": "m | f | n" },
+  "coleccionable": { "singular": "", "plural": "", "sprite": "" },
+  "colores": { "primario": "#", "secundario": "#", "fondo": "#" },
+
+  "personaje": {
+    "piel": "uno de OPCIONES.piel",
+    "pelo": "uno de OPCIONES.pelo",
+    "peinado": "corto | largo | rizado | tomado | trenzas | rapado",
+    "ropa": "polera | vestido | poleron",
+    "ropaColor": "#",
+    "pantalonColor": "#",
+    "accesorio": "ninguno | lentes | gorro | cintillo | pecas",
+    "accesorioColor": "#"
+  },
+
+  "juegos": ["runner"],
+  "trivia": { "respuestas": [] },
+  "mensajeFinal": { "texto": "", "firma": "" },
+  "entrega": { "url": "", "qr": true, "tarjetaImpresa": false }
+}

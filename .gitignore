@@ -1,0 +1,18 @@
+# Assets de terceros: tienen sus propias licencias y no se redistribuyen
+assets/
+
+# Grabaciones y material interno del negocio
+grabaciones/
+README_INTERNO.md
+LICENCIAS.md
+mensaje-*.md
+
+# Configs de clientes reales (solo se publican la plantilla y los ejemplos)
+config/*.json
+!config/_plantilla-pedido.json
+!config/ejemplo-*.json
+
+node_modules/
+
+# Catalogo comercial (precios del negocio)
+catalogo*.html

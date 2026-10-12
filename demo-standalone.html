@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!--ARTIFACT-INICIO-->
+<title>Probador de Pedidos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Paleta: taller de trabajo, no fiesta. Los tres generos usan ambar / verde
+     azulado / violeta a proposito: codificar genero como azul-rosado es
+     justamente el error que este sistema existe para evitar. */
+  :root{
+    --ground:#F3F5F2; --surface:#FFFFFF; --surface-2:#FAFBFA;
+    --ink:#191C19; --muted:#606A62; --line:#E1E5E0;
+    --action:#2F6F4F; --action-ink:#FFFFFF;
+    --canal-m:#B5721A; --canal-f:#1C7A82; --canal-n:#6B4FA8;
+    --ok:#2F6F4F; --err:#B03A2E; --adv:#9A6712;
+    --ok-bg:#E8F2EC; --err-bg:#FBECEA; --adv-bg:#FAF1E1;
+    --marca:#FBE7A1; --marca-ink:#3A2E05;
+    --radio:12px;
+    --sombra:0 1px 2px rgba(20,30,22,.06), 0 10px 26px rgba(20,30,22,.055);
+    --canal:var(--canal-f);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#141714; --surface:#1D211D; --surface-2:#232823;
+      --ink:#E7EBE6; --muted:#9AA69C; --line:#2E342E;
+      --action:#5FBE8C; --action-ink:#0F1810;
+      --canal-m:#E3A455; --canal-f:#5FC6CE; --canal-n:#A88EE0;
+      --ok:#5FBE8C; --err:#F0857A; --adv:#E0AE5A;
+      --ok-bg:#1B2A21; --err-bg:#2E1C1A; --adv-bg:#2B2317;
+      --marca:#4A3F14; --marca-ink:#FBE7A1;
+      --sombra:0 1px 2px rgba(0,0,0,.35), 0 10px 26px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#141714; --surface:#1D211D; --surface-2:#232823;
+    --ink:#E7EBE6; --muted:#9AA69C; --line:#2E342E;
+    --action:#5FBE8C; --action-ink:#0F1810;
+    --canal-m:#E3A455; --canal-f:#5FC6CE; --canal-n:#A88EE0;
+    --ok:#5FBE8C; --err:#F0857A; --adv:#E0AE5A;
+    --ok-bg:#1B2A21; --err-bg:#2E1C1A; --adv-bg:#2B2317;
+    --marca:#4A3F14; --marca-ink:#FBE7A1;
+    --sombra:0 1px 2px rgba(0,0,0,.35), 0 10px 26px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font:15px/1.55 "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+    text-wrap:balance; margin:0; letter-spacing:-.015em}
+
+  .barra{
+    background:var(--surface); border-bottom:1px solid var(--line);
+    padding:16px 26px; display:flex; flex-wrap:wrap; gap:14px;
+    align-items:baseline; justify-content:space-between;
+  }
+  .barra h1{font-size:20px; font-weight:700}
+  .barra p{margin:0; color:var(--muted); font-size:13px; max-width:62ch}
+
+  .taller{
+    max-width:1280px; margin:0 auto; padding:22px 26px 64px;
+    display:grid; grid-template-columns:minmax(290px,370px) 1fr; gap:20px; align-items:start;
+  }
+  @media(max-width:920px){ .taller{grid-template-columns:1fr} }
+
+  .panel{background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radio); box-shadow:var(--sombra); padding:17px 18px; margin-bottom:18px}
+  .panel > h2{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; font-weight:500;
+    text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:14px;
+  }
+
+  .fila{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:15px}
+  .fila:last-child{margin-bottom:0}
+
+  button{
+    font:500 13.5px/1 "IBM Plex Sans",system-ui,sans-serif; cursor:pointer;
+    border:1px solid var(--line); background:var(--surface-2); color:var(--ink);
+    border-radius:8px; padding:9px 13px; transition:border-color .12s, color .12s, background .12s;
+  }
+  button:hover{border-color:var(--ink)}
+  button:focus-visible{outline:2px solid var(--action); outline-offset:2px}
+  button.on{background:var(--canal); border-color:var(--canal); color:#FFF}
+  button.primario{background:var(--action); border-color:var(--action); color:var(--action-ink)}
+  button.primario:hover{filter:brightness(1.07)}
+
+  label{display:block; font-size:11px; color:var(--muted); margin:0 0 6px;
+    font-weight:600; letter-spacing:.04em; text-transform:uppercase}
+  select,input[type=text]{
+    width:100%; font:inherit; font-size:14px; padding:8px 10px;
+    border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink);
+  }
+  select:focus,input:focus,textarea:focus{outline:2px solid var(--action); outline-offset:1px}
+
+  .par{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:15px}
+
+  .muestras{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px}
+  .muestra{width:27px; height:27px; border-radius:50%; border:2px solid transparent;
+    cursor:pointer; padding:0; background-clip:padding-box}
+  .muestra.on{border-color:var(--ink)}
+  .muestra:focus-visible{outline:2px solid var(--action); outline-offset:2px}
+
+  #lienzo{display:flex; justify-content:center; align-items:flex-end; min-height:270px;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:14px}
+  #lienzo svg{height:240px; width:auto}
+
+  /* El color del canal recorre la salida: siempre sabes que genero estas leyendo. */
+  .bloque{border:1px solid var(--line); border-left:3px solid var(--canal);
+    border-radius:10px; padding:15px 17px; margin-bottom:11px; background:var(--surface-2)}
+  .bloque .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:500;
+    text-transform:uppercase; letter-spacing:.11em; color:var(--canal); margin-bottom:5px}
+  .bloque .rotulo{font-size:20px; font-weight:700; margin:0 0 10px;
+    font-family:"Bricolage Grotesque",system-ui,sans-serif; letter-spacing:-.02em}
+  .bloque dl{margin:0; display:grid; grid-template-columns:112px 1fr; gap:6px 14px; font-size:13.5px}
+  .bloque dt{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); padding-top:3px}
+  .bloque dd{margin:0}
+  mark{background:var(--marca); color:var(--marca-ink); border-radius:3px; padding:0 2px}
+  /* Las variables que rellena el juego mientras se juega (puntos, nivel...) no
+     se resuelven aqui. Se muestran como ficha para que no parezcan un error. */
+  .runtime{
+    font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.03em;
+    border:1px dashed var(--line); color:var(--muted); border-radius:5px;
+    padding:1px 6px; white-space:nowrap;
+  }
+  .runtime::before{content:"↻ "; opacity:.65}
+
+  .lint div{padding:8px 11px; border-radius:8px; margin-bottom:6px;
+    font-family:"IBM Plex Mono",monospace; font-size:11.5px; line-height:1.5}
+  .lint .bien{background:var(--ok-bg); color:var(--ok)}
+  .lint .err{background:var(--err-bg); color:var(--err)}
+  .lint .adv{background:var(--adv-bg); color:var(--adv)}
+
+  textarea{width:100%; min-height:180px; padding:11px; border:1px solid var(--line);
+    border-radius:9px; resize:vertical; background:var(--surface-2); color:var(--ink);
+    font:400 12px/1.55 "IBM Plex Mono",ui-monospace,Consolas,monospace}
+
+  .nota{font-size:12px; color:var(--muted); margin:9px 0 0; line-height:1.5}
+  .leyenda{display:flex; flex-wrap:wrap; gap:13px; font-size:11.5px; color:var(--muted);
+    font-family:"IBM Plex Mono",monospace}
+  .leyenda span{display:flex; align-items:center; gap:5px}
+  .punto{width:9px; height:9px; border-radius:50%; display:inline-block}
+</style>
+</head>
+<body>
+<!--ARTIFACT-CUERPO-->
+
+<div class="barra">
+  <div>
+    <h1>Probador de Pedidos</h1>
+    <p>Cambia el género y mira cómo se reescriben los 6 juegos. Corre el revisor antes de entregar.</p>
+  </div>
+  <div class="leyenda">
+    <span><i class="punto" style="background:var(--canal-m)"></i>masculino</span>
+    <span><i class="punto" style="background:var(--canal-f)"></i>femenino</span>
+    <span><i class="punto" style="background:var(--canal-n)"></i>neutro</span>
+  </div>
+</div>
+
+<div class="taller">
+
+  <div>
+    <div class="panel">
+      <h2>Pedido de ejemplo</h2>
+      <div class="fila" id="presets"></div>
+      <label>Género del cumpleañero</label>
+      <div class="fila" id="genero"></div>
+      <label>Género de la mascota</label>
+      <div class="fila" id="generoMascota"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Personaje modular</h2>
+      <div id="lienzo"></div>
+      <div class="par" style="margin-top:15px">
+        <div><label>Peinado</label><select id="peinado"></select></div>
+        <div><label>Ropa</label><select id="ropa"></select></div>
+        <div><label>Accesorio</label><select id="accesorio"></select></div>
+        <div><label>Nombre</label><input type="text" id="nombre"></div>
+      </div>
+      <label>Tono de piel</label><div class="muestras" id="piel"></div>
+      <label>Color de pelo</label><div class="muestras" id="pelo"></div>
+      <label>Color de ropa</label><div class="muestras" id="ropaColor"></div>
+      <div class="fila">
+        <button id="azar">Al azar</button>
+        <button id="copiar" class="primario">Copiar config</button>
+      </div>
+      <p class="nota">Ninguna opción está marcada como “de niño” o “de niña”. El cliente elige libre: un niño puede llevar trenzas y una niña pantalón.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Config del pedido</h2>
+      <textarea id="json" spellcheck="false" aria-label="Config del pedido en JSON"></textarea>
+      <div class="fila" style="margin-top:11px">
+        <button id="aplicar" class="primario">Aplicar cambios</button>
+      </div>
+      <p class="nota" id="jsonError"></p>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Revisor — correr antes de entregar</h2>
+      <div class="lint" id="lint"></div>
+    </div>
+    <div class="panel">
+      <h2>Textos resueltos — resaltado = vino del config</h2>
+      <div id="salida"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/**
+ * Motor de texto con género — juegos-cumple
+ *
+ * Resuelve tokens de género y variables en todos los textos del juego,
+ * para que la MISMA plantilla funcione con Sofía, Pedro o Alex.
+ *
+ * SINTAXIS
+ * --------
+ *   {nombre}          -> variable del config
+ *   {edad} {mascota} {lugar} {colegio} ...
+ *   [o|a|e]           -> género del cumpleañero  (m | f | n)
+ *   [m:o|a|e]         -> género de la mascota    (m | f | n)
+ *
+ * EJEMPLOS
+ *   "¡Bienvenid[o|a|e], {nombre}!"        -> "¡Bienvenida, Sofía!"  / "¡Bienvenido, Pedro!"
+ *   "Eres [un|una|une] campe[ón|ona|one]" -> "Eres una campeona"    / "Eres un campeón"
+ *   "{mascota} está perdid[m:o|a|e]"      -> "Luna está perdida"    / "Rocky está perdido"
+ *   "Ayuda a encontrar[m:lo|la|le]"       -> "Ayuda a encontrarla"
+ *
+ * REGLA DE ORO: escribe SIEMPRE las 3 variantes (m|f|n).
+ * Usa lint() para detectar tokens incompletos antes de entregar un pedido.
+ */
+
+const ORDEN = { m: 0, f: 1, n: 2 };
+
+/** Variables que el juego rellena mientras se juega, no el config del cliente. */
+const RUNTIME = ['puntos', 'nivel', 'tiempo', 'cliente', 'sabor', 'jugador', 'ganador'];
+
+/** Resuelve un string con tokens usando el config del cliente. */
+function t(str, cfg) {
+  if (typeof str !== 'string') return str;
+
+  const gNino = ORDEN[cfg.genero] ?? 2;
+  const gMasc = ORDEN[cfg.mascota?.genero] ?? 2;
+
+  return str
+    // [m:o|a|e]  -> género de la mascota
+    .replace(/\[m:([^\]]*)\]/g, (_, ops) => pick(ops, gMasc))
+    // [o|a|e]    -> género del cumpleañero
+    .replace(/\[([^\]]*)\]/g, (_, ops) => pick(ops, gNino))
+    // {variable}
+    .replace(/\{(\w+)\}/g, (m, k) => {
+      const v = variables(cfg)[k];
+      return v === undefined ? m : v;
+    });
+}
+
+function pick(ops, idx) {
+  const partes = ops.split('|');
+  // Si faltan variantes, cae a la última disponible (nunca revienta en producción).
+  return partes[idx] ?? partes[partes.length - 1] ?? '';
+}
+
+/** Aplana el config a las variables disponibles en los textos. */
+function variables(cfg) {
+  return {
+    nombre: cfg.nombre,
+    apodo: cfg.apodo || cfg.nombre,
+    edad: cfg.edad,
+    lugar: cfg.lugar,
+    colegio: cfg.colegio,
+    ciudad: cfg.ciudad,
+    mascota: cfg.mascota?.nombre || '',
+    tipoMascota: cfg.mascota?.tipo || '',
+    coleccionable: cfg.coleccionable?.plural || '',
+    amigo1: cfg.amigos?.[0] || '',
+    amigo2: cfg.amigos?.[1] || '',
+    amigo3: cfg.amigos?.[2] || '',
+    deQuien: cfg.mensajeFinal?.firma || '',
+  };
+}
+
+/**
+ * Revisa un objeto de textos y devuelve los problemas encontrados.
+ * Corre esto ANTES de exportar el juego de cada cliente.
+ */
+function lint(textos, cfg) {
+  const problemas = [];
+  const vars = [...Object.keys(variables(cfg)), ...RUNTIME];
+
+  const revisar = (valor, ruta) => {
+    if (typeof valor === 'object' && valor !== null) {
+      for (const [k, v] of Object.entries(valor)) revisar(v, `${ruta}.${k}`);
+      return;
+    }
+    if (typeof valor !== 'string') return;
+
+    // Tokens de género con menos de 3 variantes
+    for (const match of valor.matchAll(/\[(?:m:)?([^\]]*)\]/g)) {
+      const n = match[1].split('|').length;
+      if (n < 3) {
+        problemas.push({
+          tipo: 'genero-incompleto',
+          ruta,
+          detalle: `"${match[0]}" tiene ${n} variante(s), faltan para m|f|n`,
+        });
+      }
+    }
+    // Variables que no existen
+    for (const match of valor.matchAll(/\{(\w+)\}/g)) {
+      if (!vars.includes(match[1])) {
+        problemas.push({
+          tipo: 'variable-desconocida',
+          ruta,
+          detalle: `{${match[1]}} no existe en el config`,
+        });
+      }
+    }
+    // Variables que quedaron vacías con este cliente en particular
+    let resuelto = t(valor, cfg);
+    RUNTIME.forEach((r) => { resuelto = resuelto.split('{' + r + '}').join('X'); });
+    if (/\{\w+\}/.test(resuelto)) {
+      problemas.push({ tipo: 'sin-resolver', ruta, detalle: resuelto });
+    }
+    if (/\s{2,}|\s+[.,!?]/.test(resuelto)) {
+      problemas.push({
+        tipo: 'espacio-raro',
+        ruta,
+        detalle: `"${resuelto}" — probablemente una variable vacía`,
+      });
+    }
+  };
+
+  revisar(textos, 'textos');
+  return problemas;
+}
+
+/** Aplica t() recursivamente a un árbol de textos. Úsalo al arrancar el juego. */
+function resolverTodo(textos, cfg) {
+  if (typeof textos === 'string') return t(textos, cfg);
+  if (Array.isArray(textos)) return textos.map((x) => resolverTodo(x, cfg));
+  if (typeof textos === 'object' && textos !== null) {
+    const out = {};
+    for (const [k, v] of Object.entries(textos)) out[k] = resolverTodo(v, cfg);
+    return out;
+  }
+  return textos;
+}
+
+if (typeof module !== 'undefined') module.exports = { t, lint, resolverTodo, variables, RUNTIME };
+</script>
+<script>
+/**
+ * Textos de los 5 juegos — juegos-cumple
+ *
+ * REGLA DE TÍTULOS: el título es siempre  <Nombre> + verbo  ó  sustantivo de
+ * lugar/objeto + de <Nombre>.  NUNCA un adjetivo ni un rol de persona.
+ *   ✅ "¡Corre, Pedro!"            (verbo)
+ *   ✅ "La pastelería de Sofía"    (lugar)
+ *   ❌ "Sofía la Valiente"         (adjetivo -> se rompe con Pedro)
+ *   ❌ "El pastelero Pedro"        (rol -> se rompe con Sofía)
+ * Así los títulos nunca necesitan tokens de género y se ven bien en el afiche.
+ */
+
+const TEXTOS = {
+
+  // ---------- Comunes a todos los juegos ----------
+  comun: {
+    bienvenida:   '¡Bienvenid[o|a|e], {nombre}!',
+    subtitulo:    'Hoy cumples {edad} años',
+    jugar:        'JUGAR',
+    reintentar:   'Otra vez',
+    listo:        '¿Estás list[o|a|e]?',
+    ganaste:      '¡Lo lograste, {nombre}!',
+    perdiste:     '¡Casi! Inténtalo de nuevo.',
+    nuevoRecord:  '¡Nuevo récord! Eres [un|una|une] crack.',
+    cargando:     'Preparando la sorpresa...',
+    creditos:     'Hecho con cariño para {nombre}',
+    despedida:    '¡Feliz cumpleaños, {nombre}! Te quieren mucho, {deQuien}.',
+  },
+
+  // ---------- 1. Runner ----------
+  runner: {
+    titulo:      '¡Corre, {nombre}!',
+    instruccion: 'Toca la pantalla para saltar y junta tod[os|os|es] l[os|os|es] {coleccionable}',
+    intro:       '{nombre} va corriendo por {lugar} y encontró un montón de {coleccionable}. ¡A juntarl[os|os|es]!',
+    obstaculo:   '¡Cuidado! No te tropieces.',
+    meta:        '¡Llegaste a la meta! Juntaste {puntos} {coleccionable}.',
+    animo:       '¡Sigue así, {nombre}! Nadie corre como tú.',
+  },
+
+  // ---------- 2. Trivia ----------
+  trivia: {
+    titulo:      '¿Cuánto sabes de {nombre}?',
+    instruccion: 'Un juego para tod[os|os|es] l[os|os|es] invitad[os|os|es] de la fiesta',
+    intro:       'Hoy {nombre} cumple {edad}. ¿Quién [lo|la|le] conoce mejor? ¡A demostrarlo!',
+    correcta:    '¡Correcto! Conoces bien a {nombre}.',
+    incorrecta:  '¡Uy, no! {nombre} dice que no.',
+    turno:       'Turno de {jugador}',
+    ganador:     '¡{ganador} es quien mejor conoce a {nombre}!',
+    // Estas 8 las llenas con los papás en el formulario del pedido:
+    preguntas: [
+      '¿Cuál es el color favorito de {nombre}?',
+      '¿Qué come {nombre} cuando puede elegir?',
+      '¿Cómo se llama [su|su|su] mascota?',
+      '¿A qué juega {nombre} todo el día?',
+      '¿Qué es lo que más [le|le|le] da risa a {nombre}?',
+      '¿Cuál es el superpoder que {nombre} querría tener?',
+      '¿Qué canción se sabe de memoria?',
+      '¿Con quién se ríe más {nombre}?',
+    ],
+  },
+
+  // ---------- 3. Aventura (premium) ----------
+  aventura: {
+    titulo:      '{nombre} y el regalo perdido',
+    instruccion: 'Toca los objetos para buscar pistas',
+    intro:       '¡Alguien escondió el regalo de {nombre}! Hay que buscarlo por {ciudad} antes de que llegue la torta.',
+    pista1:      'Miraste por todos lados en tu pieza... ¡pero encontraste una pista!',
+    pista2:      'En {colegio} nadie vio nada. Pero {amigo1} te dio una idea.',
+    pista3:      '{amigo2} y {amigo3} te están esperando en {lugar}.',
+    encontrado:  '¡Ahí está! Estabas tan cerca todo este tiempo, {nombre}.',
+    final:       'Todos gritaron: ¡Feliz cumpleaños, {nombre}! Y tú quedaste contentísim[o|a|e].',
+  },
+
+  // ---------- 4. Plataformas ----------
+  plataformas: {
+    titulo:      '{nombre} rescata a {mascota}',
+    instruccion: 'Salta, esquiva y llega hasta {mascota}',
+    intro:       '¡{mascota} se perdió en {lugar}! Sol[o|a|e] {nombre} puede encontrar[m:lo|la|le].',
+    nivel:       'Nivel {nivel}',
+    amigoLibre:  '¡Rescataste a {amigo1}! Ahora te acompaña.',
+    casi:        '{mascota} está cerca, ¡sigue subiendo!',
+    final:       '¡{mascota} está a salvo! Y está feliz de verte, {nombre}.',
+  },
+
+  // ---------- 5. Pastelería ----------
+  pasteleria: {
+    titulo:      'La pastelería de {nombre}',
+    instruccion: 'Arma las tortas antes de que se acabe el tiempo',
+    intro:       'Hoy {nombre} atiende la pastelería más rica de {ciudad}. ¡Llegaron un montón de pedidos!',
+    pedido:      '{cliente} quiere una torta de {sabor}',
+    servido:     '¡Perfecta! El cliente quedó feliz.',
+    equivocado:  'Mmm, esa no era. ¡Pero sigue!',
+    final:       'Vendiste {puntos} tortas. ¡{nombre} es [el|la|le] mejor de {ciudad}!',
+  },
+
+  // ---------- Extra: Memorice ----------
+  memorice: {
+    titulo:      'El memorice de {nombre}',
+    instruccion: 'Encuentra las parejas de fotos',
+    intro:       'Fotos de {nombre} y de tod[os|os|es] l[os|os|es] que [lo|la|le] quieren.',
+    pareja:      '¡Pareja encontrada!',
+    final:       'Terminaste en {tiempo} segundos. ¡Qué buena memoria, {nombre}!',
+  },
+};
+
+if (typeof module !== 'undefined') module.exports = { TEXTOS };
+</script>
+<script>
+/**
+ * Personaje modular ("muneca de papel") - juegos-cumple
+ *
+ * Cubre el "se parece a mi hijo/hija" en el 90% de los casos SIN dibujar nada
+ * nuevo por pedido. El dibujo a mano desde foto queda para el plan Premium.
+ *
+ * IMPORTANTE: las opciones NO estan agrupadas por genero. No existe un "set de
+ * nina" y un "set de nino" - el papa o la mama elige libremente pelo, ropa y
+ * accesorio. Un nino puede llevar pelo largo y una nina pantalon.
+ *
+ * Estos SVG son el punto de partida. Cuando tengas sprites reales (Kenney.nl,
+ * CC0), reemplaza dibujar() por tu atlas y manten EXACTAMENTE las mismas claves
+ * de opciones: asi los configs de clientes viejos siguen funcionando.
+ */
+
+const OPCIONES = {
+  piel:      ['#F8D9C0', '#F0C29B', '#D9A273', '#B87A4E', '#8D5524', '#5C3A21'],
+  pelo:      ['#2B2118', '#5A3A22', '#8B5E34', '#C9903F', '#E8C25A', '#B33A2E', '#8A8A8A', '#E85DA1'],
+  peinado:   ['corto', 'largo', 'rizado', 'tomado', 'trenzas', 'rapado'],
+  ropa:      ['polera', 'vestido', 'poleron'],
+  accesorio: ['ninguno', 'lentes', 'gorro', 'cintillo', 'pecas'],
+};
+
+const DEFECTO = {
+  piel: '#F0C29B', pelo: '#5A3A22', peinado: 'corto',
+  ropa: 'polera', ropaColor: '#4A90D9', pantalonColor: '#3A4A63',
+  accesorio: 'ninguno', accesorioColor: '#E85DA1',
+};
+
+// ---------------------------------------------------------------- peinados
+const PEINADOS = {
+  rapado: (c) => ({
+    atras: '',
+    frente: '<path d="M52 78 Q100 26 148 78 Q148 58 100 54 Q52 58 52 78Z" fill="' + c + '"/>',
+  }),
+  corto: (c) => ({
+    atras: '',
+    frente: '<path d="M48 92 Q46 32 100 32 Q154 32 152 92 Q150 60 128 56 Q110 74 74 62 Q54 66 48 92Z" fill="' + c + '"/>',
+  }),
+  largo: (c) => ({
+    atras: '<path d="M42 92 Q40 26 100 26 Q160 26 158 92 L158 208 Q140 214 138 190 L138 110 Q120 88 100 88 Q80 88 62 110 L62 190 Q60 214 42 208Z" fill="' + c + '"/>',
+    frente: '<path d="M48 88 Q46 34 100 34 Q154 34 152 88 Q146 58 124 54 Q108 72 72 60 Q54 62 48 88Z" fill="' + c + '"/>',
+  }),
+  rizado: (c) => {
+    const bolitas = [[62, 62, 20], [86, 44, 22], [114, 44, 22], [138, 62, 20], [52, 86, 16], [148, 86, 16]]
+      .map((b) => '<circle cx="' + b[0] + '" cy="' + b[1] + '" r="' + b[2] + '" fill="' + c + '"/>')
+      .join('');
+    return {
+      atras: bolitas,
+      frente: bolitas + '<path d="M52 88 Q50 46 100 46 Q150 46 148 88 Q140 64 100 64 Q60 64 52 88Z" fill="' + c + '"/>',
+    };
+  },
+  tomado: (c) => ({
+    atras: '<circle cx="100" cy="26" r="22" fill="' + c + '"/>',
+    frente: '<path d="M50 88 Q48 32 100 32 Q152 32 150 88 Q144 58 100 58 Q56 58 50 88Z" fill="' + c + '"/>',
+  }),
+  trenzas: (c) => ({
+    atras:
+      '<path d="M46 86 Q44 30 100 30 Q156 30 154 86 L154 100 Q140 96 138 84 L62 84 Q60 96 46 100Z" fill="' + c + '"/>' +
+      '<circle cx="46" cy="120" r="13" fill="' + c + '"/><circle cx="46" cy="146" r="12" fill="' + c + '"/><circle cx="46" cy="170" r="10" fill="' + c + '"/>' +
+      '<circle cx="154" cy="120" r="13" fill="' + c + '"/><circle cx="154" cy="146" r="12" fill="' + c + '"/><circle cx="154" cy="170" r="10" fill="' + c + '"/>',
+    frente: '<path d="M50 88 Q48 34 100 34 Q152 34 150 88 Q142 60 100 60 Q58 60 50 88Z" fill="' + c + '"/>',
+  }),
+};
+
+// ------------------------------------------------------------------- ropa
+const ROPA = {
+  polera: (c, p) =>
+    '<rect x="80" y="196" width="17" height="46" rx="6" fill="' + p + '"/>' +
+    '<rect x="103" y="196" width="17" height="46" rx="6" fill="' + p + '"/>' +
+    '<rect x="62" y="138" width="76" height="66" rx="18" fill="' + c + '"/>',
+  poleron: (c, p) =>
+    '<rect x="80" y="196" width="17" height="46" rx="6" fill="' + p + '"/>' +
+    '<rect x="103" y="196" width="17" height="46" rx="6" fill="' + p + '"/>' +
+    '<rect x="58" y="136" width="84" height="74" rx="22" fill="' + c + '"/>' +
+    '<path d="M100 138 L100 168" stroke="rgba(0,0,0,.18)" stroke-width="4" stroke-linecap="round"/>',
+  vestido: (c, p) =>
+    '<rect x="84" y="196" width="14" height="46" rx="6" fill="' + p + '"/>' +
+    '<rect x="103" y="196" width="14" height="46" rx="6" fill="' + p + '"/>' +
+    '<path d="M64 140 Q100 130 136 140 L152 206 Q100 220 48 206Z" fill="' + c + '"/>',
+};
+
+// ------------------------------------------------------------- accesorios
+const ACCESORIOS = {
+  ninguno: () => '',
+  lentes: () =>
+    '<g fill="none" stroke="#3A3A3A" stroke-width="4">' +
+    '<circle cx="80" cy="88" r="17"/><circle cx="120" cy="88" r="17"/>' +
+    '<path d="M97 88 L103 88"/><path d="M63 84 L50 80"/><path d="M137 84 L150 80"/></g>',
+  gorro: (c) =>
+    '<path d="M46 76 Q100 18 154 76Z" fill="' + c + '"/>' +
+    '<rect x="40" y="70" width="120" height="16" rx="8" fill="' + c + '"/>' +
+    '<circle cx="100" cy="22" r="10" fill="#FFFFFF" opacity=".85"/>',
+  cintillo: (c) =>
+    '<path d="M54 70 Q100 40 146 70" stroke="' + c + '" stroke-width="9" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="140" cy="54" r="9" fill="' + c + '"/><circle cx="152" cy="60" r="7" fill="' + c + '"/>',
+  pecas: () =>
+    '<g fill="rgba(0,0,0,.22)">' +
+    '<circle cx="70" cy="100" r="2.5"/><circle cx="78" cy="104" r="2.5"/><circle cx="68" cy="108" r="2.5"/>' +
+    '<circle cx="130" cy="100" r="2.5"/><circle cx="122" cy="104" r="2.5"/><circle cx="132" cy="108" r="2.5"/></g>',
+};
+
+/** Devuelve el SVG completo del personaje. */
+function dibujar(personaje) {
+  const p = Object.assign({}, DEFECTO, personaje || {});
+  const pelo = (PEINADOS[p.peinado] || PEINADOS.corto)(p.pelo);
+  const ropa = (ROPA[p.ropa] || ROPA.polera)(p.ropaColor, p.pantalonColor);
+  const acc = (ACCESORIOS[p.accesorio] || ACCESORIOS.ninguno)(p.accesorioColor);
+
+  return '<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Personaje">' +
+    pelo.atras +
+    '<rect x="76" y="236" width="26" height="13" rx="6" fill="#33373F"/>' +
+    '<rect x="98" y="236" width="26" height="13" rx="6" fill="#33373F"/>' +
+    ropa +
+    '<rect x="46" y="146" width="17" height="52" rx="8" fill="' + p.ropaColor + '"/>' +
+    '<rect x="137" y="146" width="17" height="52" rx="8" fill="' + p.ropaColor + '"/>' +
+    '<circle cx="54" cy="200" r="10" fill="' + p.piel + '"/>' +
+    '<circle cx="146" cy="200" r="10" fill="' + p.piel + '"/>' +
+    '<rect x="92" y="122" width="16" height="22" fill="' + p.piel + '"/>' +
+    '<circle cx="52" cy="92" r="9" fill="' + p.piel + '"/>' +
+    '<circle cx="148" cy="92" r="9" fill="' + p.piel + '"/>' +
+    '<circle cx="100" cy="88" r="50" fill="' + p.piel + '"/>' +
+    pelo.frente +
+    '<ellipse cx="82" cy="88" rx="6" ry="7.5" fill="#2B2B2B"/>' +
+    '<ellipse cx="118" cy="88" rx="6" ry="7.5" fill="#2B2B2B"/>' +
+    '<circle cx="84" cy="85" r="2.2" fill="#FFF"/>' +
+    '<circle cx="120" cy="85" r="2.2" fill="#FFF"/>' +
+    '<circle cx="70" cy="104" r="7" fill="rgba(232,93,124,.28)"/>' +
+    '<circle cx="130" cy="104" r="7" fill="rgba(232,93,124,.28)"/>' +
+    '<path d="M86 106 Q100 120 114 106" stroke="#2B2B2B" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+    acc +
+    '</svg>';
+}
+
+/** Personaje al azar - util para poblar la demo y los afiches. */
+function alAzar() {
+  const r = (a) => a[Math.floor(Math.random() * a.length)];
+  return {
+    piel: r(OPCIONES.piel),
+    pelo: r(OPCIONES.pelo),
+    peinado: r(OPCIONES.peinado),
+    ropa: r(OPCIONES.ropa),
+    ropaColor: r(['#4A90D9', '#E85DA1', '#3FB98B', '#F2A03D', '#8B6BD9', '#E5544B']),
+    pantalonColor: r(['#3A4A63', '#5B4636', '#2F6B52', '#6B3550']),
+    accesorio: r(OPCIONES.accesorio),
+    accesorioColor: r(['#E85DA1', '#4A90D9', '#F2A03D', '#3FB98B']),
+  };
+}
+
+if (typeof module !== 'undefined') module.exports = { dibujar, alAzar, OPCIONES, DEFECTO };
+</script>
+<script>
+// Van embebidos porque abrir con file:// no permite fetch() de JSON.
+// Servido por HTTP, cargalos con fetch desde /config.
+const EJEMPLOS = {
+  'Sofía': {
+    nombre:'Sofía', apodo:'Sofi', genero:'f', edad:6,
+    ciudad:'Valparaíso', lugar:'la plaza de su casa', colegio:'el jardín Los Aromos',
+    amigos:['Martina','Benja','Emilia'],
+    mascota:{nombre:'Luna', tipo:'gata', genero:'f'},
+    coleccionable:{singular:'gatito', plural:'gatitos'},
+    personaje:{piel:'#F0C29B',pelo:'#2B2118',peinado:'trenzas',ropa:'vestido',
+               ropaColor:'#E85DA1',pantalonColor:'#6B3550',accesorio:'pecas',accesorioColor:'#FFD166'},
+    mensajeFinal:{texto:'Gracias por llenarnos la casa de risas.', firma:'Mamá, Papá y la Luna'}
+  },
+  'Pedro': {
+    nombre:'Pedro', apodo:'Peter', genero:'m', edad:7,
+    ciudad:'Quilpué', lugar:'la cancha del barrio', colegio:'la escuela San Martín',
+    amigos:['Vicente','Amanda','Tomás'],
+    mascota:{nombre:'Rocky', tipo:'perro', genero:'m'},
+    coleccionable:{singular:'balón', plural:'balones'},
+    personaje:{piel:'#B87A4E',pelo:'#2B2118',peinado:'rizado',ropa:'polera',
+               ropaColor:'#2E86DE',pantalonColor:'#3A4A63',accesorio:'ninguno',accesorioColor:'#F2A03D'},
+    mensajeFinal:{texto:'Eres lo mejor que nos pasó.', firma:'Papá, Mamá y el Rocky'}
+  },
+  'Alex': {
+    nombre:'Alex', apodo:'Alex', genero:'n', edad:5,
+    ciudad:'Viña del Mar', lugar:'la playa', colegio:'el jardín Arcoíris',
+    amigos:['Iván','Renata','Dani'],
+    mascota:{nombre:'Kiwi', tipo:'conejo', genero:'n'},
+    coleccionable:{singular:'caracol', plural:'caracoles'},
+    personaje:{piel:'#8D5524',pelo:'#8B5E34',peinado:'corto',ropa:'poleron',
+               ropaColor:'#3FB98B',pantalonColor:'#2F6B52',accesorio:'lentes',accesorioColor:'#F2A03D'},
+    mensajeFinal:{texto:'Que este año sea puro juego.', firma:'Tu familia'}
+  }
+};
+
+const ROTULO = {
+  comun:'Comunes a todos', runner:'1 · Runner', trivia:'2 · Trivia',
+  aventura:'3 · Aventura (premium)', plataformas:'4 · Plataformas',
+  pasteleria:'5 · Pastelería', memorice:'Extra · Memorice'
+};
+
+let cfg = JSON.parse(JSON.stringify(EJEMPLOS['Sofía']));
+let preset = 'Sofía';
+
+const $ = (id) => document.getElementById(id);
+
+function botones(cont, items, activo, alElegir){
+  cont.innerHTML = '';
+  items.forEach(([valor, etiqueta]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = etiqueta;
+    if (valor === activo) b.className = 'on';
+    b.onclick = () => { alElegir(valor); pintar(); };
+    cont.appendChild(b);
+  });
+}
+
+function muestras(cont, colores, activo, alElegir){
+  cont.innerHTML = '';
+  colores.forEach((c) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'muestra' + (c === activo ? ' on' : '');
+    b.style.background = c; b.title = c; b.setAttribute('aria-label', c);
+    b.onclick = () => { alElegir(c); pintar(); };
+    cont.appendChild(b);
+  });
+}
+
+function opciones(sel, lista, activo, alElegir){
+  sel.innerHTML = '';
+  lista.forEach((v) => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    if (v === activo) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.onchange = () => { alElegir(sel.value); pintar(); };
+}
+
+const esc = (s) => String(s).replace(/[&<>]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+
+/** Resalta lo que salio del config, para ver de un vistazo que se personalizo. */
+function resaltar(resuelto, c){
+  const piezas = new Set();
+  Object.values(variables(c)).forEach((v) => { if (v && String(v).length > 2) piezas.add(String(v)); });
+  let html = esc(resuelto);
+  [...piezas].sort((a,b) => b.length - a.length).forEach((p) => {
+    const e = esc(p);
+    if (html.indexOf(e) === -1) return;
+    html = html.split(e).join('' + e + '');
+  });
+  // Las variables de runtime quedan sin resolver a proposito: se muestran como
+  // ficha en vez de "{puntos}" crudo, que parece un texto roto.
+  html = html.replace(/\{(\w+)\}/g, '<span class="runtime">$1</span>');
+  return html.split('').join('<mark>').split('').join('</mark>');
+}
+
+function pintar(){
+  document.documentElement.style.setProperty('--canal', 'var(--canal-' + cfg.genero + ')');
+
+  botones($('presets'), Object.keys(EJEMPLOS).map((k) => [k,k]), preset, (k) => {
+    preset = k; cfg = JSON.parse(JSON.stringify(EJEMPLOS[k]));
+  });
+  botones($('genero'), [['m','masculino'],['f','femenino'],['n','neutro']],
+    cfg.genero, (v) => { cfg.genero = v; });
+  botones($('generoMascota'), [['m','masculino'],['f','femenino'],['n','neutro']],
+    cfg.mascota.genero, (v) => { cfg.mascota.genero = v; });
+
+  const p = cfg.personaje;
+  opciones($('peinado'), OPCIONES.peinado, p.peinado, (v) => { p.peinado = v; });
+  opciones($('ropa'), OPCIONES.ropa, p.ropa, (v) => { p.ropa = v; });
+  opciones($('accesorio'), OPCIONES.accesorio, p.accesorio, (v) => { p.accesorio = v; });
+  muestras($('piel'), OPCIONES.piel, p.piel, (v) => { p.piel = v; });
+  muestras($('pelo'), OPCIONES.pelo, p.pelo, (v) => { p.pelo = v; });
+  muestras($('ropaColor'),
+    ['#4A90D9','#E85DA1','#3FB98B','#F2A03D','#8B6BD9','#E5544B','#2E86DE','#33373F'],
+    p.ropaColor, (v) => { p.ropaColor = v; });
+
+  $('nombre').value = cfg.nombre;
+  $('nombre').oninput = () => { cfg.nombre = $('nombre').value; pintarSalida(); };
+
+  $('lienzo').innerHTML = dibujar(p);
+  $('json').value = JSON.stringify(cfg, null, 2);
+  $('jsonError').textContent = '';
+  pintarSalida();
+}
+
+function bloque(clave, datos){
+  const div = document.createElement('div');
+  div.className = 'bloque';
+  let html = '<div class="eyebrow">' + (ROTULO[clave] || clave) + '</div>';
+  if (datos.titulo) html += '<p class="rotulo">' + resaltar(t(datos.titulo, cfg), cfg) + '</p>';
+  html += '<dl>';
+  Object.entries(datos).forEach(([k, v]) => {
+    if (k === 'titulo') return;
+    const cuerpo = Array.isArray(v)
+      ? v.map((x) => resaltar(t(x, cfg), cfg)).join('<br>')
+      : resaltar(t(v, cfg), cfg);
+    html += '<dt>' + k + '</dt><dd>' + cuerpo + '</dd>';
+  });
+  div.innerHTML = html + '</dl>';
+  return div;
+}
+
+function pintarSalida(){
+  const cont = $('salida');
+  cont.innerHTML = '';
+  Object.entries(TEXTOS).forEach(([clave, datos]) => cont.appendChild(bloque(clave, datos)));
+
+  const problemas = lint(TEXTOS, cfg);
+  const lc = $('lint');
+  lc.innerHTML = '';
+  if (!problemas.length){
+    const d = document.createElement('div');
+    d.className = 'bien';
+    d.textContent = 'Sin problemas. Los ' + Object.keys(TEXTOS).length +
+      ' bloques resuelven bien para ' + cfg.nombre + ' (género: ' + cfg.genero + ').';
+    lc.appendChild(d);
+    return;
+  }
+  problemas.forEach((pr) => {
+    const d = document.createElement('div');
+    d.className = (pr.tipo === 'genero-incompleto' || pr.tipo === 'variable-desconocida') ? 'err' : 'adv';
+    d.textContent = '[' + pr.tipo + '] ' + pr.ruta + ' — ' + pr.detalle;
+    lc.appendChild(d);
+  });
+}
+
+$('azar').onclick = () => { cfg.personaje = alAzar(); pintar(); };
+$('copiar').onclick = () => {
+  navigator.clipboard.writeText(JSON.stringify(cfg, null, 2));
+  $('copiar').textContent = 'Copiado';
+  setTimeout(() => { $('copiar').textContent = 'Copiar config'; }, 1400);
+};
+$('aplicar').onclick = () => {
+  try { cfg = JSON.parse($('json').value); pintar(); }
+  catch (e) {
+    $('jsonError').textContent = 'JSON inválido: ' + e.message;
+    $('jsonError').style.color = 'var(--err)';
+  }
+};
+
+pintar();
+</script>
+<!--ARTIFACT-FIN-->
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "pedido": {
+    "id": "2026-0015",
+    "plan": "premium",
+    "fechaFiesta": "2026-10-04",
+    "contacto": "Rodrigo (papá) +56 9 xxxx xxxx"
+  },
+
+  "nombre": "Pedro",
+  "apodo": "Peter",
+  "genero": "m",
+  "edad": 7,
+
+  "ciudad": "Quilpué",
+  "lugar": "la cancha del barrio",
+  "colegio": "la escuela San Martín",
+  "amigos": ["Vicente", "Amanda", "Tomás"],
+
+  "mascota": { "nombre": "Rocky", "tipo": "perro", "genero": "m" },
+
+  "coleccionable": { "singular": "balón", "plural": "balones", "sprite": "assets/coleccionables/balon.png" },
+
+  "colores": { "primario": "#2E86DE", "secundario": "#F2A03D", "fondo": "#F0F7FF" },
+
+  "personaje": {
+    "piel": "#B87A4E",
+    "pelo": "#2B2118",
+    "peinado": "rizado",
+    "ropa": "polera",
+    "ropaColor": "#2E86DE",
+    "pantalonColor": "#3A4A63",
+    "accesorio": "ninguno",
+    "accesorioColor": "#F2A03D"
+  },
+
+  "juegos": ["runner", "trivia", "aventura", "plataformas", "memorice"],
+
+  "trivia": {
+    "respuestas": [
+      { "correcta": "Azul", "otras": ["Rojo", "Amarillo"] },
+      { "correcta": "Completos", "otras": ["Brócoli", "Sopa"] },
+      { "correcta": "Rocky", "otras": ["Luna", "Kira"] },
+      { "correcta": "A la pelota", "otras": ["A los autos", "Al escondite"] },
+      { "correcta": "Cuando el Rocky ladra dormido", "otras": ["Los chistes malos", "Las cosquillas"] },
+      { "correcta": "Ser super rápido", "otras": ["Volar", "Ser invisible"] },
+      { "correcta": "El himno de la U", "otras": ["Baby Shark", "Feliz cumpleaños"] },
+      { "correcta": "Vicente", "otras": ["Amanda", "El tío Nacho"] }
+    ]
+  },
+
+  "mensajeFinal": {
+    "texto": "Eres lo mejor que nos pasó.",
+    "firma": "Papá, Mamá y el Rocky"
+  },
+
+  "entrega": {
+    "url": "https://juegos-cumple.cl/j/pedro-2026",
+    "qr": true,
+    "tarjetaImpresa": true
+  }
+}

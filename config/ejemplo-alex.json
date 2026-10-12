@@ -1,0 +1,27 @@
+{
+  "pedido": { "id": "2026-0016", "plan": "basico", "fechaFiesta": "2026-11-12", "contacto": "Pau (madre)" },
+
+  "nombre": "Alex",
+  "apodo": "Alex",
+  "genero": "n",
+  "edad": 5,
+
+  "ciudad": "Viña del Mar",
+  "lugar": "la playa",
+  "colegio": "el jardín Arcoíris",
+  "amigos": ["Iván", "Renata", "Dani"],
+
+  "mascota": { "nombre": "Kiwi", "tipo": "conejo", "genero": "n" },
+  "coleccionable": { "singular": "caracol", "plural": "caracoles", "sprite": "assets/coleccionables/caracol.png" },
+  "colores": { "primario": "#3FB98B", "secundario": "#F2A03D", "fondo": "#F1FBF6" },
+
+  "personaje": {
+    "piel": "#8D5524", "pelo": "#8B5E34", "peinado": "corto",
+    "ropa": "poleron", "ropaColor": "#3FB98B", "pantalonColor": "#2F6B52",
+    "accesorio": "lentes", "accesorioColor": "#F2A03D"
+  },
+
+  "juegos": ["runner", "memorice"],
+  "mensajeFinal": { "texto": "Que este año sea puro juego.", "firma": "Tu familia" },
+  "entrega": { "url": "https://juegos-cumple.cl/j/alex-2026", "qr": true, "tarjetaImpresa": false }
+}

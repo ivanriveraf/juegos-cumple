@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!--ARTIFACT-INICIO-->
+<title>Probador de Pedidos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Paleta: taller de trabajo, no fiesta. Los tres generos usan ambar / verde
+     azulado / violeta a proposito: codificar genero como azul-rosado es
+     justamente el error que este sistema existe para evitar. */
+  :root{
+    --ground:#F3F5F2; --surface:#FFFFFF; --surface-2:#FAFBFA;
+    --ink:#191C19; --muted:#606A62; --line:#E1E5E0;
+    --action:#2F6F4F; --action-ink:#FFFFFF;
+    --canal-m:#B5721A; --canal-f:#1C7A82; --canal-n:#6B4FA8;
+    --ok:#2F6F4F; --err:#B03A2E; --adv:#9A6712;
+    --ok-bg:#E8F2EC; --err-bg:#FBECEA; --adv-bg:#FAF1E1;
+    --marca:#FBE7A1; --marca-ink:#3A2E05;
+    --radio:12px;
+    --sombra:0 1px 2px rgba(20,30,22,.06), 0 10px 26px rgba(20,30,22,.055);
+    --canal:var(--canal-f);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#141714; --surface:#1D211D; --surface-2:#232823;
+      --ink:#E7EBE6; --muted:#9AA69C; --line:#2E342E;
+      --action:#5FBE8C; --action-ink:#0F1810;
+      --canal-m:#E3A455; --canal-f:#5FC6CE; --canal-n:#A88EE0;
+      --ok:#5FBE8C; --err:#F0857A; --adv:#E0AE5A;
+      --ok-bg:#1B2A21; --err-bg:#2E1C1A; --adv-bg:#2B2317;
+      --marca:#4A3F14; --marca-ink:#FBE7A1;
+      --sombra:0 1px 2px rgba(0,0,0,.35), 0 10px 26px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#141714; --surface:#1D211D; --surface-2:#232823;
+    --ink:#E7EBE6; --muted:#9AA69C; --line:#2E342E;
+    --action:#5FBE8C; --action-ink:#0F1810;
+    --canal-m:#E3A455; --canal-f:#5FC6CE; --canal-n:#A88EE0;
+    --ok:#5FBE8C; --err:#F0857A; --adv:#E0AE5A;
+    --ok-bg:#1B2A21; --err-bg:#2E1C1A; --adv-bg:#2B2317;
+    --marca:#4A3F14; --marca-ink:#FBE7A1;
+    --sombra:0 1px 2px rgba(0,0,0,.35), 0 10px 26px rgba(0,0,0,.28);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font:15px/1.55 "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+    text-wrap:balance; margin:0; letter-spacing:-.015em}
+
+  .barra{
+    background:var(--surface); border-bottom:1px solid var(--line);
+    padding:16px 26px; display:flex; flex-wrap:wrap; gap:14px;
+    align-items:baseline; justify-content:space-between;
+  }
+  .barra h1{font-size:20px; font-weight:700}
+  .barra p{margin:0; color:var(--muted); font-size:13px; max-width:62ch}
+
+  .taller{
+    max-width:1280px; margin:0 auto; padding:22px 26px 64px;
+    display:grid; grid-template-columns:minmax(290px,370px) 1fr; gap:20px; align-items:start;
+  }
+  @media(max-width:920px){ .taller{grid-template-columns:1fr} }
+
+  .panel{background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radio); box-shadow:var(--sombra); padding:17px 18px; margin-bottom:18px}
+  .panel > h2{
+    font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; font-weight:500;
+    text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:14px;
+  }
+
+  .fila{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:15px}
+  .fila:last-child{margin-bottom:0}
+
+  button{
+    font:500 13.5px/1 "IBM Plex Sans",system-ui,sans-serif; cursor:pointer;
+    border:1px solid var(--line); background:var(--surface-2); color:var(--ink);
+    border-radius:8px; padding:9px 13px; transition:border-color .12s, color .12s, background .12s;
+  }
+  button:hover{border-color:var(--ink)}
+  button:focus-visible{outline:2px solid var(--action); outline-offset:2px}
+  button.on{background:var(--canal); border-color:var(--canal); color:#FFF}
+  button.primario{background:var(--action); border-color:var(--action); color:var(--action-ink)}
+  button.primario:hover{filter:brightness(1.07)}
+
+  label{display:block; font-size:11px; color:var(--muted); margin:0 0 6px;
+    font-weight:600; letter-spacing:.04em; text-transform:uppercase}
+  select,input[type=text]{
+    width:100%; font:inherit; font-size:14px; padding:8px 10px;
+    border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink);
+  }
+  select:focus,input:focus,textarea:focus{outline:2px solid var(--action); outline-offset:1px}
+
+  .par{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:15px}
+
+  .muestras{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px}
+  .muestra{width:27px; height:27px; border-radius:50%; border:2px solid transparent;
+    cursor:pointer; padding:0; background-clip:padding-box}
+  .muestra.on{border-color:var(--ink)}
+  .muestra:focus-visible{outline:2px solid var(--action); outline-offset:2px}
+
+  #lienzo{display:flex; justify-content:center; align-items:flex-end; min-height:270px;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:14px}
+  #lienzo svg{height:240px; width:auto}
+
+  /* El color del canal recorre la salida: siempre sabes que genero estas leyendo. */
+  .bloque{border:1px solid var(--line); border-left:3px solid var(--canal);
+    border-radius:10px; padding:15px 17px; margin-bottom:11px; background:var(--surface-2)}
+  .bloque .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:500;
+    text-transform:uppercase; letter-spacing:.11em; color:var(--canal); margin-bottom:5px}
+  .bloque .rotulo{font-size:20px; font-weight:700; margin:0 0 10px;
+    font-family:"Bricolage Grotesque",system-ui,sans-serif; letter-spacing:-.02em}
+  .bloque dl{margin:0; display:grid; grid-template-columns:112px 1fr; gap:6px 14px; font-size:13.5px}
+  .bloque dt{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted); padding-top:3px}
+  .bloque dd{margin:0}
+  mark{background:var(--marca); color:var(--marca-ink); border-radius:3px; padding:0 2px}
+  /* Las variables que rellena el juego mientras se juega (puntos, nivel...) no
+     se resuelven aqui. Se muestran como ficha para que no parezcan un error. */
+  .runtime{
+    font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.03em;
+    border:1px dashed var(--line); color:var(--muted); border-radius:5px;
+    padding:1px 6px; white-space:nowrap;
+  }
+  .runtime::before{content:"↻ "; opacity:.65}
+
+  .lint div{padding:8px 11px; border-radius:8px; margin-bottom:6px;
+    font-family:"IBM Plex Mono",monospace; font-size:11.5px; line-height:1.5}
+  .lint .bien{background:var(--ok-bg); color:var(--ok)}
+  .lint .err{background:var(--err-bg); color:var(--err)}
+  .lint .adv{background:var(--adv-bg); color:var(--adv)}
+
+  textarea{width:100%; min-height:180px; padding:11px; border:1px solid var(--line);
+    border-radius:9px; resize:vertical; background:var(--surface-2); color:var(--ink);
+    font:400 12px/1.55 "IBM Plex Mono",ui-monospace,Consolas,monospace}
+
+  .nota{font-size:12px; color:var(--muted); margin:9px 0 0; line-height:1.5}
+  .leyenda{display:flex; flex-wrap:wrap; gap:13px; font-size:11.5px; color:var(--muted);
+    font-family:"IBM Plex Mono",monospace}
+  .leyenda span{display:flex; align-items:center; gap:5px}
+  .punto{width:9px; height:9px; border-radius:50%; display:inline-block}
+</style>
+</head>
+<body>
+<!--ARTIFACT-CUERPO-->
+
+<div class="barra">
+  <div>
+    <h1>Probador de Pedidos</h1>
+    <p>Cambia el género y mira cómo se reescriben los 6 juegos. Corre el revisor antes de entregar.</p>
+  </div>
+  <div class="leyenda">
+    <span><i class="punto" style="background:var(--canal-m)"></i>masculino</span>
+    <span><i class="punto" style="background:var(--canal-f)"></i>femenino</span>
+    <span><i class="punto" style="background:var(--canal-n)"></i>neutro</span>
+  </div>
+</div>
+
+<div class="taller">
+
+  <div>
+    <div class="panel">
+      <h2>Pedido de ejemplo</h2>
+      <div class="fila" id="presets"></div>
+      <label>Género del cumpleañero</label>
+      <div class="fila" id="genero"></div>
+      <label>Género de la mascota</label>
+      <div class="fila" id="generoMascota"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Personaje modular</h2>
+      <div id="lienzo"></div>
+      <div class="par" style="margin-top:15px">
+        <div><label>Peinado</label><select id="peinado"></select></div>
+        <div><label>Ropa</label><select id="ropa"></select></div>
+        <div><label>Accesorio</label><select id="accesorio"></select></div>
+        <div><label>Nombre</label><input type="text" id="nombre"></div>
+      </div>
+      <label>Tono de piel</label><div class="muestras" id="piel"></div>
+      <label>Color de pelo</label><div class="muestras" id="pelo"></div>
+      <label>Color de ropa</label><div class="muestras" id="ropaColor"></div>
+      <div class="fila">
+        <button id="azar">Al azar</button>
+        <button id="copiar" class="primario">Copiar config</button>
+      </div>
+      <p class="nota">Ninguna opción está marcada como “de niño” o “de niña”. El cliente elige libre: un niño puede llevar trenzas y una niña pantalón.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Config del pedido</h2>
+      <textarea id="json" spellcheck="false" aria-label="Config del pedido en JSON"></textarea>
+      <div class="fila" style="margin-top:11px">
+        <button id="aplicar" class="primario">Aplicar cambios</button>
+      </div>
+      <p class="nota" id="jsonError"></p>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Revisor — correr antes de entregar</h2>
+      <div class="lint" id="lint"></div>
+    </div>
+    <div class="panel">
+      <h2>Textos resueltos — resaltado = vino del config</h2>
+      <div id="salida"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="src/genero.js"></script>
+<script src="src/textos.js"></script>
+<script src="src/personaje.js"></script>
+<script>
+// Van embebidos porque abrir con file:// no permite fetch() de JSON.
+// Servido por HTTP, cargalos con fetch desde /config.
+const EJEMPLOS = {
+  'Sofía': {
+    nombre:'Sofía', apodo:'Sofi', genero:'f', edad:6,
+    ciudad:'Valparaíso', lugar:'la plaza de su casa', colegio:'el jardín Los Aromos',
+    amigos:['Martina','Benja','Emilia'],
+    mascota:{nombre:'Luna', tipo:'gata', genero:'f'},
+    coleccionable:{singular:'gatito', plural:'gatitos'},
+    personaje:{piel:'#F0C29B',pelo:'#2B2118',peinado:'trenzas',ropa:'vestido',
+               ropaColor:'#E85DA1',pantalonColor:'#6B3550',accesorio:'pecas',accesorioColor:'#FFD166'},
+    mensajeFinal:{texto:'Gracias por llenarnos la casa de risas.', firma:'Mamá, Papá y la Luna'}
+  },
+  'Pedro': {
+    nombre:'Pedro', apodo:'Peter', genero:'m', edad:7,
+    ciudad:'Quilpué', lugar:'la cancha del barrio', colegio:'la escuela San Martín',
+    amigos:['Vicente','Amanda','Tomás'],
+    mascota:{nombre:'Rocky', tipo:'perro', genero:'m'},
+    coleccionable:{singular:'balón', plural:'balones'},
+    personaje:{piel:'#B87A4E',pelo:'#2B2118',peinado:'rizado',ropa:'polera',
+               ropaColor:'#2E86DE',pantalonColor:'#3A4A63',accesorio:'ninguno',accesorioColor:'#F2A03D'},
+    mensajeFinal:{texto:'Eres lo mejor que nos pasó.', firma:'Papá, Mamá y el Rocky'}
+  },
+  'Alex': {
+    nombre:'Alex', apodo:'Alex', genero:'n', edad:5,
+    ciudad:'Viña del Mar', lugar:'la playa', colegio:'el jardín Arcoíris',
+    amigos:['Iván','Renata','Dani'],
+    mascota:{nombre:'Kiwi', tipo:'conejo', genero:'n'},
+    coleccionable:{singular:'caracol', plural:'caracoles'},
+    personaje:{piel:'#8D5524',pelo:'#8B5E34',peinado:'corto',ropa:'poleron',
+               ropaColor:'#3FB98B',pantalonColor:'#2F6B52',accesorio:'lentes',accesorioColor:'#F2A03D'},
+    mensajeFinal:{texto:'Que este año sea puro juego.', firma:'Tu familia'}
+  }
+};
+
+const ROTULO = {
+  comun:'Comunes a todos', runner:'1 · Runner', trivia:'2 · Trivia',
+  aventura:'3 · Aventura (premium)', plataformas:'4 · Plataformas',
+  pasteleria:'5 · Pastelería', memorice:'Extra · Memorice'
+};
+
+let cfg = JSON.parse(JSON.stringify(EJEMPLOS['Sofía']));
+let preset = 'Sofía';
+
+const $ = (id) => document.getElementById(id);
+
+function botones(cont, items, activo, alElegir){
+  cont.innerHTML = '';
+  items.forEach(([valor, etiqueta]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = etiqueta;
+    if (valor === activo) b.className = 'on';
+    b.onclick = () => { alElegir(valor); pintar(); };
+    cont.appendChild(b);
+  });
+}
+
+function muestras(cont, colores, activo, alElegir){
+  cont.innerHTML = '';
+  colores.forEach((c) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'muestra' + (c === activo ? ' on' : '');
+    b.style.background = c; b.title = c; b.setAttribute('aria-label', c);
+    b.onclick = () => { alElegir(c); pintar(); };
+    cont.appendChild(b);
+  });
+}
+
+function opciones(sel, lista, activo, alElegir){
+  sel.innerHTML = '';
+  lista.forEach((v) => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    if (v === activo) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.onchange = () => { alElegir(sel.value); pintar(); };
+}
+
+const esc = (s) => String(s).replace(/[&<>]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+
+/** Resalta lo que salio del config, para ver de un vistazo que se personalizo. */
+function resaltar(resuelto, c){
+  const piezas = new Set();
+  Object.values(variables(c)).forEach((v) => { if (v && String(v).length > 2) piezas.add(String(v)); });
+  let html = esc(resuelto);
+  [...piezas].sort((a,b) => b.length - a.length).forEach((p) => {
+    const e = esc(p);
+    if (html.indexOf(e) === -1) return;
+    html = html.split(e).join('' + e + '');
+  });
+  // Las variables de runtime quedan sin resolver a proposito: se muestran como
+  // ficha en vez de "{puntos}" crudo, que parece un texto roto.
+  html = html.replace(/\{(\w+)\}/g, '<span class="runtime">$1</span>');
+  return html.split('').join('<mark>').split('').join('</mark>');
+}
+
+function pintar(){
+  document.documentElement.style.setProperty('--canal', 'var(--canal-' + cfg.genero + ')');
+
+  botones($('presets'), Object.keys(EJEMPLOS).map((k) => [k,k]), preset, (k) => {
+    preset = k; cfg = JSON.parse(JSON.stringify(EJEMPLOS[k]));
+  });
+  botones($('genero'), [['m','masculino'],['f','femenino'],['n','neutro']],
+    cfg.genero, (v) => { cfg.genero = v; });
+  botones($('generoMascota'), [['m','masculino'],['f','femenino'],['n','neutro']],
+    cfg.mascota.genero, (v) => { cfg.mascota.genero = v; });
+
+  const p = cfg.personaje;
+  opciones($('peinado'), OPCIONES.peinado, p.peinado, (v) => { p.peinado = v; });
+  opciones($('ropa'), OPCIONES.ropa, p.ropa, (v) => { p.ropa = v; });
+  opciones($('accesorio'), OPCIONES.accesorio, p.accesorio, (v) => { p.accesorio = v; });
+  muestras($('piel'), OPCIONES.piel, p.piel, (v) => { p.piel = v; });
+  muestras($('pelo'), OPCIONES.pelo, p.pelo, (v) => { p.pelo = v; });
+  muestras($('ropaColor'),
+    ['#4A90D9','#E85DA1','#3FB98B','#F2A03D','#8B6BD9','#E5544B','#2E86DE','#33373F'],
+    p.ropaColor, (v) => { p.ropaColor = v; });
+
+  $('nombre').value = cfg.nombre;
+  $('nombre').oninput = () => { cfg.nombre = $('nombre').value; pintarSalida(); };
+
+  $('lienzo').innerHTML = dibujar(p);
+  $('json').value = JSON.stringify(cfg, null, 2);
+  $('jsonError').textContent = '';
+  pintarSalida();
+}
+
+function bloque(clave, datos){
+  const div = document.createElement('div');
+  div.className = 'bloque';
+  let html = '<div class="eyebrow">' + (ROTULO[clave] || clave) + '</div>';
+  if (datos.titulo) html += '<p class="rotulo">' + resaltar(t(datos.titulo, cfg), cfg) + '</p>';
+  html += '<dl>';
+  Object.entries(datos).forEach(([k, v]) => {
+    if (k === 'titulo') return;
+    const cuerpo = Array.isArray(v)
+      ? v.map((x) => resaltar(t(x, cfg), cfg)).join('<br>')
+      : resaltar(t(v, cfg), cfg);
+    html += '<dt>' + k + '</dt><dd>' + cuerpo + '</dd>';
+  });
+  div.innerHTML = html + '</dl>';
+  return div;
+}
+
+function pintarSalida(){
+  const cont = $('salida');
+  cont.innerHTML = '';
+  Object.entries(TEXTOS).forEach(([clave, datos]) => cont.appendChild(bloque(clave, datos)));
+
+  const problemas = lint(TEXTOS, cfg);
+  const lc = $('lint');
+  lc.innerHTML = '';
+  if (!problemas.length){
+    const d = document.createElement('div');
+    d.className = 'bien';
+    d.textContent = 'Sin problemas. Los ' + Object.keys(TEXTOS).length +
+      ' bloques resuelven bien para ' + cfg.nombre + ' (género: ' + cfg.genero + ').';
+    lc.appendChild(d);
+    return;
+  }
+  problemas.forEach((pr) => {
+    const d = document.createElement('div');
+    d.className = (pr.tipo === 'genero-incompleto' || pr.tipo === 'variable-desconocida') ? 'err' : 'adv';
+    d.textContent = '[' + pr.tipo + '] ' + pr.ruta + ' — ' + pr.detalle;
+    lc.appendChild(d);
+  });
+}
+
+$('azar').onclick = () => { cfg.personaje = alAzar(); pintar(); };
+$('copiar').onclick = () => {
+  navigator.clipboard.writeText(JSON.stringify(cfg, null, 2));
+  $('copiar').textContent = 'Copiado';
+  setTimeout(() => { $('copiar').textContent = 'Copiar config'; }, 1400);
+};
+$('aplicar').onclick = () => {
+  try { cfg = JSON.parse($('json').value); pintar(); }
+  catch (e) {
+    $('jsonError').textContent = 'JSON inválido: ' + e.message;
+    $('jsonError').style.color = 'var(--err)';
+  }
+};
+
+pintar();
+</script>
+<!--ARTIFACT-FIN-->
+</body>
+</html>
